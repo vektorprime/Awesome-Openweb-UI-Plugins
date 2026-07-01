@@ -1,0 +1,47 @@
+"""
+title: Reasoning Effort Selector
+id: reasoning_effort_toggle
+description: Toggle reasoning on/off and select effort level (low/medium/high) from the chat
+author: you
+license: MIT
+version: 2.0.0
+"""
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class Filter:
+    class Valves(BaseModel):
+        pass
+
+    class UserValves(BaseModel):
+        reasoning_effort: str = Field(
+            default="medium",
+            description="Reasoning effort level (only applies when toggle is ON)",
+            json_schema_extra={
+                "input": {
+                    "type": "select",
+                    "options": [
+                        {"value": "low", "label": "Low — Faster, less reasoning"},
+                        {"value": "medium", "label": "Medium — Balanced"},
+                        {"value": "high", "label": "High — Deep reasoning, slower"}
+                    ]
+                }
+            }
+        )
+
+    def __init__(self):
+        self.valves = self.Valves()
+        self.toggle = True
+        self.icon = "data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiB2aWV3Qm94PSIwIDAgMjQgMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0ibTEyIDNjLTMuNTg1IDAtNi41IDIuOTIyNS02LjUgNi41Mzg1IDAgMi4yODI2IDEuMTYyIDQuMjkxMyAyLjkyNDggNS40NjE1aDcuMTUwNGMxLjc2MjgtMS4xNzAyIDIuOTI0OC0zLjE3ODkgMi45MjQ4LTUuNDYxNSAwLTMuNjE1OS0yLjkxNS02LjUzODUtNi41LTYuNTM4NXptMi44NjUzIDE0aC01LjczMDZ2MWg1LjczMDZ2LTF6bS0xLjEzMjkgM0g3LjQ2NDhjMC4zNDU4IDAuNTk3OCAwLjk5MjEgMSAxLjczMjQgMXMxLjM4NjYtMC40MDIyIDEuNzMyNC0xem0tNS42MDY0IDBjMC40NDQwMyAxLjcyNTIgMi4wMTAxIDMgMy44NzQgM3MzLjQzLTEuMjc0OCAzLjg3NC0zYzAuNTQ4My0wLjAwNDcgMC45OTEzLTAuNDUwNiAwLjk5MTMtMXYtMi40NTkzYzIuMTk2OS0xLjU0MzEgMy42MzQ3LTQuMTA0NSAzLjYzNDctNy4wMDIyIDAtNC43MTA4LTMuODAwOC04LjUzODUtOC41LTguNTM4NS00LjY5OTIgMC04LjUgMy44Mjc2LTguNSA4LjUzODUgMCAyLjg5NzcgMS40Mzc4IDUuNDU5MSAzLjYzNDcgNy4wMDIydjIuNDU5M2MwIDAuNTQ5NCAwLjQ0MzAxIDAuOTk1MyAwLjk5MTI4IDF6IiBmaWxsPSJjdXJyZW50Q29sb3IiLz48L3N2Zz4="
+
+    async def inlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
+        # Get the user's selected effort level from UserValves
+        user_valves = __user__.get("valves") if __user__ else None
+        if user_valves and hasattr(user_valves, "reasoning_effort"):
+            effort = user_valves.reasoning_effort
+        else:
+            effort = "medium"  # fallback
+
+        # Inject reasoning_effort into the request body
+        body["reasoning_effort"] = effort
+        return body
